@@ -6,8 +6,27 @@ import 'package:flutter_wallet_ui_challenge/src/widgets/add_button.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/credit_card.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/payment_card.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/user_card.dart';
+import 'eth.dart';
+class HomePage extends StatefulWidget{
+  @override
+  HomePageUi createState() => new HomePageUi();
+}
+class HomePageUi extends State<HomePage> {
+  String balance;
+  bool bal= false;
 
-class HomePage extends StatelessWidget {
+  @override
+  void initState() {
+    ethereumWrapper wrapper = new ethereumWrapper();
+    wrapper.fetchBalance().then((val){
+      setState(() {
+        balance = val;
+        bal = true;
+      });
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final _media = MediaQuery.of(context).size;
