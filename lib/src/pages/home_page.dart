@@ -3,23 +3,41 @@ import 'package:flutter_wallet_ui_challenge/src/data/data.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/overview_page.dart';
 import 'package:flutter_wallet_ui_challenge/src/utils/screen_size.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/add_button.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'receive.dart';
+import 'decryption.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/credit_card.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/payment_card.dart';
 import 'package:flutter_wallet_ui_challenge/src/widgets/user_card.dart';
 import 'eth.dart';
+import 'send.dart';
+import 'ApiWrapper.dart';
 class HomePage extends StatefulWidget{
   @override
   HomePageUi createState() => new HomePageUi();
 }
 class HomePageUi extends State<HomePage> {
+  var _media;
+  String number;
   String balance;
   bool bal= false;
 
   @override
-  void initState() {
+  void initState()  {
+    _getprefs()async{
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      number = prefs.getString("number");
+    }
+    ApiWrapper apiwrapper = new ApiWrapper();
+    apiwrapper.history();
     ethereumWrapper wrapper = new ethereumWrapper();
-    wrapper.fetchBalance().then((val){
+    wrapper.fetchBalance().then((val)async  {
+      var add=await wrapper.fetchAddress("6FB42DA0E32E07B61C9F0251FE627A9C");
+      print("address");
+      print(add);
       setState(() {
+        _getprefs();
         balance = val;
         bal = true;
       });
@@ -29,7 +47,7 @@ class HomePageUi extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final _media = MediaQuery.of(context).size;
+    _media = MediaQuery.of(context).size;
     return Scaffold(
       body: ListView(
         padding: EdgeInsets.zero,
@@ -72,41 +90,30 @@ class HomePageUi extends State<HomePage> {
                     )
                   ],
                 ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    margin: EdgeInsets.only(
-                      left: 20,
-                    ),
-                    height: _media.longestSide <= 775
-                        ? _media.height / 4
-                        : _media.height / 4.3,
-                    width: _media.width,
-                    child:
-                        NotificationListener<OverscrollIndicatorNotification>(
-                      onNotification: (overscroll) {
-                        overscroll.disallowGlow();
-                      },
-                      child: ListView.builder(
-                        physics: BouncingScrollPhysics(),
-                        padding: EdgeInsets.only(bottom: 10),
-                        shrinkWrap: true,
-                        scrollDirection: Axis.horizontal,
-                        itemCount: getCreditCards().length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: EdgeInsets.only(right: 10),
-                            child: GestureDetector(
-                              onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => OverviewPage())),
-                              child: CreditCard(
-                                card: getCreditCards()[index],
-                              ),
-                            ),
-                          );
+                FlatButton(
+                  onPressed: (){
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) =>Send()));
+                  }
+                ,
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      margin: EdgeInsets.only(
+                        left: 20,
+                        right: 20
+                      ),
+                      height: _media.longestSide <= 775
+                          ? _media.height / 4
+                          : _media.height / 4.3,
+                      width: _media.width,
+                      child:
+                          NotificationListener<OverscrollIndicatorNotification>(
+                        onNotification: (overscroll) {
+                          overscroll.disallowGlow();
                         },
+                        child:bal ?_card():_cardLoader(),
                       ),
                     ),
                   ),
@@ -134,11 +141,14 @@ class HomePageUi extends State<HomePage> {
                           ),
                           IconButton(
                             icon: Icon(
-                              Icons.notifications_none,
+                              Icons.power_settings_new,
                               color: Colors.white,
                               size: 28,
                             ),
-                            onPressed: () => print("notification"),
+                            onPressed: ()async{
+                              SharedPreferences prefs = await SharedPreferences.getInstance();
+                              prefs.setBool("status", false);
+                            },
                           ),
                         ],
                       ),
@@ -161,11 +171,29 @@ class HomePageUi extends State<HomePage> {
                           ),
                           IconButton(
                             icon: Icon(
+                              Icons.lock,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                            onPressed: (){
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => Decryyption())
+                              );},
+                          ),
+                          IconButton(
+                            icon: Icon(
                               Icons.add,
                               color: Colors.white,
                               size: 36,
                             ),
-                            onPressed: () => print("add"),
+                            onPressed: (){
+                              Navigator.push(
+                                context,
+                                  MaterialPageRoute(
+                                      builder: (context) => Receive())
+                              );},
                           )
                         ],
                       ),
@@ -320,4 +348,116 @@ class HomePageUi extends State<HomePage> {
       ),
     );
   }
+  _cardLoader(){
+    return new Material(
+      elevation: 1,
+      shadowColor: Colors.grey.shade300,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Center(
+        child: Padding(
+            padding: EdgeInsets.all(20),
+          child: SpinKitCircle(color: Colors.blueGrey, size: 50),
+        ),
+      )
+    );
+
+  }
+  _card(){
+
+    return new Material(
+      elevation: 1,
+      shadowColor: Colors.grey.shade300,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Stack(
+        children: <Widget>[
+          Container(
+            width: _media.width - 40,
+            padding: EdgeInsets.only(left: 30, right: 30, top: 30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  "Mobile No.",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                Text(
+                  number,
+                  style: Theme.of(context).textTheme.headline.copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  "Balance",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey.shade400,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Text(balance,
+                    style: Theme.of(context).textTheme.headline.copyWith(
+                      color: Colors.black.withOpacity(0.5),
+                      fontWeight: FontWeight.bold,
+                    ))
+              ],
+            ),
+          ),
+          Positioned(
+            top: 15,
+            right: 15,
+            child: Container(
+              height: 25,
+              width: 50,
+              color: Colors.pink,
+              padding: EdgeInsets.all(7),
+              child: Image.asset(
+                "assets/images/bg1.jpg",
+                width: 50,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
+// ListView.builder(
+//                        physics: BouncingScrollPhysics(),
+//                        padding: EdgeInsets.only(bottom: 10),
+//                        shrinkWrap: true,
+//                        scrollDirection: Axis.horizontal,
+//                        itemCount: getCreditCards().length,
+//                        itemBuilder: (context, index) {
+//                          return Padding(
+//                            padding: EdgeInsets.only(right: 10),
+//                            child: GestureDetector(
+//                              onTap: () => Navigator.push(
+//                                  context,
+//                                  MaterialPageRoute(
+//                                      builder: (context) => OverviewPage())),
+//                              child: CreditCard(
+//                                card: getCreditCards()[index],
+//                              ),
+//                            ),
+//                          );
+//                        },
+//                      ),

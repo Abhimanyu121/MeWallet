@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/home_page.dart';
-import 'package:flutter_wallet_ui_challenge/src/pages/send.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/register.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/login.dart';
 
@@ -12,9 +11,9 @@ class App extends StatefulWidget {
 }
 class AppUi extends State<App>{
   Widget currentWidget = Register();
-  Future<dynamic> getStatus() async {
+  _getStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('status');
+    return prefs.getBool("status");
   }
   final routes = <String, WidgetBuilder>{
     "/login":(context) =>Login(),
@@ -23,16 +22,17 @@ class AppUi extends State<App>{
   };
   @override
   void initState() {
-    getStatus().then((value){
-      if (value == null|| value ==false) {
+    _getStatus().then((value){
+      print("value is ");
+      if (value==true ) {
         print(value.toString());
         setState(() {
-          currentWidget = Register();
+          currentWidget = HomePage();
         });
       } else {
         print(value.toString());
         setState(() {
-          currentWidget = HomePage();
+          currentWidget = Register();
         });
       }
     });
@@ -45,7 +45,8 @@ class AppUi extends State<App>{
         theme: ThemeData(
        fontFamily: "Varela",
       ),
-      home: Send(),
+      home: currentWidget,
+      routes: routes,
     );
   }
 

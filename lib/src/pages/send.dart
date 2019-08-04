@@ -1,12 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/utils/screen_size.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/eth.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:toast/toast.dart';
+import 'eth.dart';
+import 'ApiWrapper.dart';
 class Send extends StatefulWidget{
   @override
   SendUi createState() => new SendUi();
 }
 
 class SendUi extends State<Send>{
+  bool fetch= true;
+  String balance ;
+  int transacts;
+  _fetchbal()async{
+    ethereumWrapper eth= new ethereumWrapper();
+    return eth.fetchBalance();
+  }
+  _fetchTransactions(){
+    ethereumWrapper eth= new ethereumWrapper();
+    return  eth.fetchTransactionNumbers();
+  }
+  _loader(){
+    return SpinKitCircle(color: Colors.black, size: 20);
+  }
+  var phone = new TextEditingController();
+  var value = new TextEditingController();
+
+  @override
+  void initState() {
+    _fetchbal().then((bal){
+      _fetchTransactions().then((trans){
+        setState(() {
+
+          balance= bal;
+          transacts = trans;
+          fetch =false;
+        });
+      });
+    });
+  }
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -57,8 +91,8 @@ class SendUi extends State<Send>{
               ),
               Row(
                 children: <Widget>[
-                  colorCard("Cash", 35.170, 1, context, Color(0xFF1b5bff)),
-                  colorCard("Credit Debt", 4320, -1, context, Color(0xFFff3f5e)),
+                  fetch?_loader():colorCard("Ether in Wallet",int.parse(balance), 1, context, Color(0xFF1b5bff)),
+                  fetch?_loader():colorCard("Transactions", transacts, 1, context, Color(0xFFff3f5e)),
                 ],
               ),
               SizedBox(
@@ -92,6 +126,7 @@ class SendUi extends State<Send>{
                     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
                   ),
+                  controller: phone,
                 ),
               ),
               SizedBox(
@@ -121,11 +156,11 @@ class SendUi extends State<Send>{
                 keyboardType: TextInputType.number,
                 autofocus: false,
                 decoration: InputDecoration(
-                  hintText: 'Amount in WEI',
+                  hintText: 'Amount in Ether',
                   contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
                 ),
-                //controller:,
+                controller: value,
               ),
             ),
             Padding(
@@ -134,9 +169,17 @@ class SendUi extends State<Send>{
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
-                onPressed: (){
+                onPressed: ()async{
                   ethereumWrapper wrapper = new ethereumWrapper();
-                  wrapper.fetchAddress("dfghjkl");
+                  await wrapper.send(phone.text, int.parse(value.text)).then((val){
+                    _grant(phone.text);
+                    if(val){
+                      Toast.show("Sent", context,duration :Toast.LENGTH_LONG);
+                    }else {
+                      Toast.show("Sent", context,duration :Toast.LENGTH_LONG);
+                    }
+                  });
+
                 },
                 padding: EdgeInsets.all(12),
                 color: Colors.blueAccent,
@@ -148,7 +191,7 @@ class SendUi extends State<Send>{
     );
   }
   Widget colorCard(
-      String text, double amount, int type, BuildContext context, Color color) {
+      String text, int amount, int type, BuildContext context, Color color) {
     final _media = MediaQuery.of(context).size;
     return Container(
       margin: EdgeInsets.only(top: 15, right: 15),
@@ -180,7 +223,7 @@ class SendUi extends State<Send>{
               ),
             ),
             Text(
-              "${type > 0 ? "" : "-"} \$ ${amount.toString()}",
+              "${amount.toString()}",
               style: TextStyle(
                 fontSize: 22,
                 color: Colors.white,
@@ -191,5 +234,10 @@ class SendUi extends State<Send>{
         ),
       ),
     );
+  }
+  _grant(String phone ){
+    ApiWrapper wrapper = new ApiWrapper();
+    wrapper.grant();
+
   }
 }

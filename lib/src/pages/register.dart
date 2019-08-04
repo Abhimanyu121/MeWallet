@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_wallet_ui_challenge/src/pages/eth.dart';
 import 'package:convert/convert.dart';
 import 'dart:convert';
+import 'qrcode.dart';
+import 'ApiWrapper.dart';
 import 'package:crypto/crypto.dart' as crypto;
 
 class Register extends StatefulWidget{
@@ -220,10 +222,18 @@ class RegisterUi extends State<Register>{
     var hash =  hex.encode(digest.bytes);
     print(hash);
     ethereumWrapper wrapper = new ethereumWrapper();
-    bool status = await wrapper.wallet();
-    if(status){
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', ModalRoute.withName('/register'));
-    }
+    await wrapper.newWallet(passNew.text,phNew.text).then((wallet){
+      wrapper.mapHash(hash, wallet['address']).then((status){
+        print("status is ");
+        print(status);
+        if (status==true){
+          _policy();
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) =>QR()));
+        }
+      });
+    });
   }
   _exisitingWallet(){
     var content = new Utf8Encoder().convert(exPh.text);
@@ -234,7 +244,7 @@ class RegisterUi extends State<Register>{
     ethereumWrapper wrapper = new ethereumWrapper();
     bool status = wrapper.existing(exMn.text,exPh.text);
     if(status){
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', ModalRoute.withName('/register'));
+      Navigator.of(context).pushNamedAndRemoveUntil('/register', ModalRoute.withName('/home'));
     }
   }
 
@@ -316,6 +326,11 @@ class RegisterUi extends State<Register>{
         ],
 
     );
+  }
+  _policy(){
+    ApiWrapper wrapper = new ApiWrapper();
+    wrapper.keyGen();
+
   }
 
 }
