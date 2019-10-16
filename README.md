@@ -17,7 +17,7 @@ One of the most famous way to transfer fiat currency using mobile numbers. In a 
 1. Dart
 2. Solidity
 
-
+Sgmwgmwym
 ## Progress
 - [x] Complex hashing of phone number
 - [x] Sending ether when address are mapped with hash of phone number
