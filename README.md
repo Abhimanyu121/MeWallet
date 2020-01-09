@@ -29,3 +29,7 @@ One of the most famous way to transfer fiat currency using mobile numbers. In a 
 - [x] Giving users encrypted QR code with their account details(Needs some fixing)
 - [ ] Showing transaction history to users
 - [ ] Integrating Phone book
+## Team
+- Abhimanyu Shekhawat `abhimanyu121` `abhimanyushekhawat17.as@gmail.com`
+- Manank Patni `man-jain` `manankpatni@gmail.com`
+- Suraj Singla
